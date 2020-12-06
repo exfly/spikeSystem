@@ -19,9 +19,9 @@ const LuaScript = `
 
 //远程订单存储健值
 type RemoteSpikeKeys struct {
-	SpikeOrderHashKey string	//redis中秒杀订单hash结构key
-	TotalInventoryKey string	//hash结构中总订单库存key
-	QuantityOfOrderKey string	//hash结构中已有订单数量key
+	SpikeOrderHashKey  string //redis中秒杀订单hash结构key
+	TotalInventoryKey  string //hash结构中总订单库存key
+	QuantityOfOrderKey string //hash结构中已有订单数量key
 }
 
 //初始化redis连接池

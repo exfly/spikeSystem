@@ -1,0 +1,21 @@
+version: "3"
+services:
+  redis:
+    # https://github.com/docker-library/redis/blob/7ccc22760cc9b659916678a52654be8f43757551/6.0/alpine/Dockerfile
+    image: redis:6-alpine
+    command: "redis-server /etc/redis/redis.conf"
+    volumes:
+      - redis:/data
+      - ./redis.conf:/etc/redis/redis.conf
+    ports:
+      - 6379:6379
+  ab:
+    image: jordi/ab
+    entrypoint: "tail -f /dev/null"
+    network_mode: host
+    # volumes:
+      # - /tmp/simplehttp.unix:/data/simplehttp.unix
+
+volumes:
+  redis:
+    driver: local

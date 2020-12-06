@@ -13,16 +13,16 @@ import (
 )
 
 var (
-	localSpike localSpike2.LocalSpike
+	localSpike  localSpike2.LocalSpike
 	remoteSpike remoteSpike2.RemoteSpikeKeys
-	redisPool *redis.Pool
-	done chan int
+	redisPool   *redis.Pool
+	done        chan int
 )
 
 //初始化要使用的结构体和redis连接池
 func init() {
 	localSpike = localSpike2.LocalSpike{
-		LocalInStock:     150,
+		LocalInStock:     10000,
 		LocalSalesVolume: 0,
 	}
 	remoteSpike = remoteSpike2.RemoteSpikeKeys{
@@ -37,9 +37,13 @@ func init() {
 
 func main() {
 	http.HandleFunc("/buy/ticket", handleReq)
+	http.HandleFunc("/simple", simpleHandler)
+
 	http.ListenAndServe(":3005", nil)
 }
 
+// ab -n 10000 -c 1000 http://localhost:3005/buy/ticket
+// 2600(10000个库存) 18777(0)
 //处理请求函数,根据请求将响应结果信息写入日志
 func handleReq(w http.ResponseWriter, r *http.Request) {
 	redisConn := redisPool.Get()
@@ -47,7 +51,7 @@ func handleReq(w http.ResponseWriter, r *http.Request) {
 	<-done
 	//全局读写锁
 	if localSpike.LocalDeductionStock() && remoteSpike.RemoteDeductionStock(redisConn) {
-		util.RespJson(w, 1,  "抢票成功", nil)
+		util.RespJson(w, 1, "抢票成功", nil)
 		LogMsg = LogMsg + "result:1,localSales:" + strconv.FormatInt(localSpike.LocalSalesVolume, 10)
 	} else {
 		util.RespJson(w, -1, "已售罄", nil)
@@ -55,7 +59,13 @@ func handleReq(w http.ResponseWriter, r *http.Request) {
 	}
 	//将抢票状态写入到log中
 	done <- 1
-	writeLog(LogMsg, "./stat.log")
+	writeLog(LogMsg, "/tmp/stat.log")
+}
+
+// ab -n 10000 -c 1000 http://localhost:3005/simple
+// 18729.98
+func simpleHandler(w http.ResponseWriter, r *http.Request) {
+	util.RespJson(w, 0, "demo", nil)
 }
 
 func writeLog(msg string, logPath string) {
